@@ -3,7 +3,6 @@
 
 const oracledb = require("oracledb");
 const dbconfig = require("./dbconfig.js");
-const {options} = require("axios"); // db연결정보 파일
 
 async function main() {
 
