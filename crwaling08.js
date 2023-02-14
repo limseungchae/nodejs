@@ -3,6 +3,7 @@
 // 지상/지하 주차장수 추출
 
 const { Builder, Browser, By, Key, until, Select } = require('selenium-webdriver');
+const {findInPath} = require("selenium-webdriver/io");
 
 async function main() {
     const URL = 'http://k-apt.go.kr';
@@ -74,10 +75,52 @@ async function main() {
         }
         await sleep(3000);
 
-        for(let addr of aptaddrs) {
+        for(let addr of aptaddrs) { // 아파트 주소
             console.log(await addr.getAttribute('textContent'));
         }
-        await chrome.sleep(3000);
+        await chrome.sleep(1500);
+
+        // 아이파크 삼성동 항목을 찾아 인덱스값 추출
+        let idx = 0;
+        for (let val of apts) {
+            console.log(`${idx++} ${await val.getAttribute('textContent')}`);
+            if (await val.getText('textContent') == apt) break;
+        }
+
+        // 추출한 인덱스값을 이용해서 항목 직접 클릭
+        menu = await chrome.findElement(
+            By.css(`.mCSB_container ul li:nth-child(${idx}) a`));
+
+        await chrome.actions().move({origin: menu})
+            .click().perform();
+
+        // await chrome.executeScript(
+        //     'arguments[0].click();', apts[--idx]);
+        await chrome.sleep(1500);
+
+        // -------------------------
+        // 관리시설 정보 클릭
+        await chrome.wait(until.elementLocated(
+            By.css('.lnbNav li:nth-child(3) a')),5000);
+
+        menu = await chrome.findElement(
+            By.css('.lnbNav li:nth-child(3) a'));
+
+        await chrome.actions().move({origin: menu})
+            .click().perform();
+
+        await sleep(1000);
+
+        // 지상/지하 주차장 대수 추출
+        let pcnt = await chrome.findElement(
+            By.css('#kaptd_pcnt')).getText();
+        let pcntu = await chrome.findElement(
+            By.css('#kaptd_pcntu')).getText();
+        let tpcnt = await chrome.findElement(
+            By.css('#kaptd_total_pcnt')).getText();
+
+        console.log(`지상: ${pcnt} 지하: ${pcntu} 총: ${tpcnt}`);
+        await sleep(3000);
 
     } catch (ex) {
         console.log(ex);
